@@ -47,6 +47,7 @@
 #include <android-base/cmsg.h>
 #include <android-base/file.h>
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android-base/strings.h>
 #include <android-base/unique_fd.h>
 
@@ -1008,6 +1009,12 @@ void initLogging() {
 void createBpfFsSubDirectories() {
     for (const auto& location : android::bpf::locations) {
         if (android::bpf::createSysFsBpfSubDir(location.prefix)) {
+            ALOGE("=== CRITICAL FAILURE LOADING BPF PROGRAMS ===");
+            ALOGE("If this triggers reliably, you're probably missing kernel options or patches.");
+            ALOGE("If this triggers randomly, you might be hitting some memory allocation "
+                    "problems or startup script race.");
+            ALOGE("--- DO NOT EXPECT SYSTEM TO BOOT SUCCESSFULLY ---");
+            android::base::SetProperty("bpf.progs_loaded", "1");
             exit(120);
         }
     }
